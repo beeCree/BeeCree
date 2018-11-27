@@ -26,7 +26,7 @@ def dateColumn2Float(dataframe, col_index): ## given dataframe and int, returns 
         array1[i, col_index] = day_of_year/365 + date.year
     return pd.DataFrame(array1)
         
-print(cutConcat(np.array([[1,2,3],[4,5,6]]),1))
+gc.collect()
 warnings.filterwarnings("ignore")
 application_train = pd.read_csv('test.csv') ##data_train.csv이어야 하지만 테스트용
 ## input data에서 첫 줄을 띄어줘야 한다.
