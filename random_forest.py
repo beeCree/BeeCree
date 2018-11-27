@@ -90,7 +90,7 @@ print(sfm.get_support(indices = True))
 ## 중요도가 높은 feature를 걸러낸 data
 for index in range(len(clf.feature_importances_)):
     if not index in sfm.get_support(indices = True):
-        total_data_df.drop(index, axis=1,inplace=True)
+        pd.DataFrame(total_data_df).drop(index, axis=1,inplace=True)
 print("total_data_df = ")
 print(total_data_df)
 ##**************************************************************
