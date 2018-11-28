@@ -22,6 +22,7 @@ ONEHOT_SKIP = 3
 IMPUTE_SKIP = 4
 KIND_OF_FS = 5
 M_FEATURES =100
+CONST_DATE_INDEX = 12
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
 ## 2. concat같이 오래 걸리는 한 번만 해도 되는 작업은
@@ -105,7 +106,7 @@ def onehotNd2f(application_train, y): ## input이 "skip"이면 skip. else not sk
         print("Converting data to float and reproducing NaNs...")
         total_data_df = dateColumn2Float(total_data_df, 0) ##0번째 feature은 날짜.
         
-        total_data_df = dateColumn2Float(total_data_df, 12)
+        total_data_df = dateColumn2Float(total_data_df, CONST_DATE_INDEX)
         ##원래 18번째 feature가 날짜지만 카테고리데이터가 뒤로 가서 12번째로 당겨짐
         ##항상 12번째로 오므로 딱히 문제는 없다고 생각
         print("done.")
