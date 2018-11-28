@@ -6,6 +6,9 @@ import time
 import sys
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+from lightgbm import LGBMClassifier
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import OneHotEncoder
 from datetime import datetime
@@ -125,21 +128,83 @@ def impute(total_data_df):
         print("Saving data on impute.csv")
         pd.DataFrame(total_data_df).to_csv("impute.csv", index=False)
         return total_data_df
-def selectfs(total_data_df):
+def selectfs(total_data_df,y):
     if(sys.argv[KIND_OF_FS] == "wrapper" or sys.argv[KIND_OF_FS] == "all"):
-        wrapper(total_data_df)
-    if(True):
-        pass
-def wrapper(total_data_df):
+        wrapper(total_data_df,y)
+    if(sys.argv[KIND_OF_FS] == "lightgbm" or sys.argv[KIND_OF_FS] == "all"):
+        lightGBM(total_data_df,y)
+    if(sys.argv[KIND_OF_FS] == "cor_selector" or sys.argv[KIND_OF_FS] == "all"):
+        cor_selector(total_data_df,y)
+    if(sys.argv[KIND_OF_FS] == "chi2" or sys.argv[KIND_OF_FS] == "all"):
+        chi2_square(total_data_df,y)
+    if(sys.argv[KIND_OF_FS] == "embedded_lr" or sys.argv[KIND_OF_FS] == "all"):
+        Embedded_LR(total_data_df,y)
+    
+    return 1;
+def wrapper(total_data_df,y):
     print("Wrapping...")
     data_norm = MinMaxScaler().fit_transform(total_data_df)
     rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=30, step=10, verbose=5)
     rfe_selector.fit(data_norm, y)
     rfe_support = rfe_selector.get_support()
-    rfe_feature = pd.DataFrame(total_data_df).loc[:,rfe_support].columns.tolist()
+    rfe_feature = total_data_df.loc[:,rfe_support].columns.tolist()
     print(str(len(rfe_feature)), 'selected features')
+    pd.DataFrame(rfe_feature).to_csv("wrapper.csv", index=False)
     return rfe_feature
+
+def lightGBM(total_data_df,y):
+    print("lightGBMClassifier")
+    lgbc=LGBMClassifier(n_estimators = 500, random_state = 0, n_jobs = -1, learning_rate=0.05, num_leaves = 32, colsample_bytree=0.2, reg_alpha=3, reg_lambda=1, min_split_gain=0.01, min_child_weight=40) 
+    sfm = SelectFromModel(lgbc, max_features = 30, threshold = 1)
+    sfm.fit(total_data_df,y)
+    sfm_support = sfm.get_support()
+    sfm_feature = total_data_df.loc[:,sfm_support].columns.tolist()
+    print(str(len(sfm_feature)), 'selected features')
+    pd.DataFrame(sfm_feature).to_csv("lightgbm.csv", index=False)
+    return sfm_feature
+
+def cor_selector(X, y):
+    print("cor_selector")
+    cor_list = []
+    # calculate the correlation with y for each feature
+    for i in X.columns.tolist():
+        cor = np.corrcoef(pd.DataFrame(X[i]), y)[0, 1]
+        cor_list.append(cor)
+    # replace NaN with 0
+    cor_list = [0 if np.isnan(i) else i for i in cor_list]
+    # feature name
+    cor_feature = X.iloc[:,np.argsort(np.abs(cor_list))[-30:]].columns.tolist()
+    cor_feature.sort()
+    print(str(len(cor_feature)), 'selected features')
+    pd.DataFrame(cor_feature).to_csv("pearson.csv", index=False)
+    return cor_feature
+
+def chi2_square(total_data_df, y):
+    print("chi2_square")
+    X_norm = MinMaxScaler().fit_transform(total_data_df)
+    chi_selector = SelectKBest(chi2, k=30)
+    chi_selector.fit(X_norm, y)
+    chi_support = chi_selector.get_support()
+    chi_feature = total_data_df.loc[:,chi_support].columns.tolist()
+    print(str(len(chi_feature)), 'selected features')
+    pd.DataFrame(chi_feature).to_csv("chi2.csv", index=False)
+    return chi_feature
+
+def Embedded_LR(total_data_df,y):
+    print("Embedded LR")
+    X = total_data_df
+    X_norm = MinMaxScaler().fit_transform(X)
+
+    embedded_lr_selector = SelectFromModel(LogisticRegression(penalty="l1"), '1.25*median')
+    embedded_lr_selector.fit(X_norm, y)
+
+    embedded_lr_support = embedded_lr_selector.get_support()
+    embedded_lr_feature = X.loc[:,embedded_lr_support].columns.tolist()
+    print(str(len(embedded_lr_feature)), 'selected features')
+    pd.DataFrame(embedded_lr_feature).to_csv("embedded_lr.csv", index=False)
     
+    return embedded_lr_selector.get_support(indices = True)
+
 gc.collect()        
 warnings.filterwarnings("ignore")
 ## input data에서 첫 줄을 띄어줘야 한다.
@@ -152,8 +217,8 @@ y=makey(application_train)
 total_data_df = onehotNd2f(application_train, y)
 gc.collect()
 
-total_data_df = impute(total_data_df)
+total_data_df = pd.DataFrame(impute(total_data_df))
 gc.collect()
 
-features = selectfs(total_data_df)
+features = selectfs(total_data_df,y)
 gc.collect()
