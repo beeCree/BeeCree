@@ -4,6 +4,7 @@ import gc
 import warnings
 import time
 import sys
+import math
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
@@ -21,8 +22,8 @@ MAKEY_SKIP = 2
 ONEHOT_SKIP = 3
 IMPUTE_SKIP = 4
 KIND_OF_FS = 5
-M_FEATURES =100
-CONST_DATE_INDEX = 12
+M_FEATURES =50
+CONST_DATE_INDEX = 13
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
 ## 2. concat같이 오래 걸리는 한 번만 해도 되는 작업은
@@ -37,6 +38,25 @@ CONST_DATE_INDEX = 12
 ##  위에 const로 정의해놓았으니 입력 방식을 바꾸고 싶으면
 ##  import 아래를 참조.
 ##**************************************************************************************
+
+def sindeg(x):
+    return math.sin(x*math.pi/180)
+def cosdeg(x):
+    return math.cos(x*math.pi/180)
+
+def handle_deg(application_train):
+    deg = application_train[["9"]]
+    deg1 = deg.values
+    sincos = np.zeros((length(deg1),2))
+    for i in range(length(deg1)):
+        sincos[i,0] = sindeg(deg1[i])
+        sincos[i,1] = cosdeg(deg1[i])
+    array1 = application_train.values
+    temp1 =  np.concatenate((array1[:,:9],sincos),axis=1)
+    result = np.concatenate((temp1,array1[:,10:]),axis=1)
+    return pd.DataFrame(result)
+
+###############
 def cutConcat(array1,col_index): ## given ndarray and int, returns ndarray
     return np.concatenate((array1[:,:col_index],array1[:,col_index+1:]),axis=1)
 def length(array1): ## given ndarray, returns int
@@ -231,6 +251,8 @@ warnings.filterwarnings("ignore")
 application_train = pd.read_csv(sys.argv[FILE_NAME]) ##data_train.csv이어야 하지만 테스트용
 
 y=makey(application_train)
+
+application_train = handle_deg(application_train)
 
 total_data_df = onehotNd2f(application_train, y)
 gc.collect()
