@@ -21,7 +21,7 @@ MAKEY_SKIP = 2
 ONEHOT_SKIP = 3
 IMPUTE_SKIP = 4
 KIND_OF_FS = 5
-M_FEATURES =30
+M_FEATURES =100
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
 ## 2. concat같이 오래 걸리는 한 번만 해도 되는 작업은
@@ -130,22 +130,41 @@ def impute(total_data_df):
         pd.DataFrame(total_data_df).to_csv("impute.csv", index=False)
         return total_data_df
 def selectfs(total_data_df,y):
-    if(sys.argv[KIND_OF_FS] == "wrapper" or sys.argv[KIND_OF_FS] == "all"):
-        wrapper(total_data_df,y)
-    if(sys.argv[KIND_OF_FS] == "lightgbm" or sys.argv[KIND_OF_FS] == "all"):
-        lightGBM(total_data_df,y)
-    if(sys.argv[KIND_OF_FS] == "cor_selector" or sys.argv[KIND_OF_FS] == "all"):
-        cor_selector(total_data_df,y)
+    run_time_list=[]
     if(sys.argv[KIND_OF_FS] == "chi2" or sys.argv[KIND_OF_FS] == "all"):
+        start=time.time()
         chi2_square(total_data_df,y)
+        end=time.time()
+        run_time_list.append(end-start)
     if(sys.argv[KIND_OF_FS] == "embedded_lr" or sys.argv[KIND_OF_FS] == "all"):
+        start=time.time()
         Embedded_LR(total_data_df,y)
-    
+        end=time.time()
+        run_time_list.append(end-start)
+    if(sys.argv[KIND_OF_FS] == "lightgbm" or sys.argv[KIND_OF_FS] == "all"):
+        start=time.time()
+        lightGBM(total_data_df,y)
+        end=time.time()
+        run_time_list.append(end-start)
+    if(sys.argv[KIND_OF_FS] == "wrapper" or sys.argv[KIND_OF_FS] == "all"):
+        start=time.time()
+        wrapper(total_data_df,y)
+        end=time.time()
+        run_time_list.append(end-start)
+    if(sys.argv[KIND_OF_FS] == "cor_selector" or sys.argv[KIND_OF_FS] == "all"):
+        start=time.time()
+        cor_selector(total_data_df,y)
+        end=time.time()
+        run_time_list.append(end-start)
+
+    pd.DataFrame(run_time_list,
+                 columns=['chi2','embedded_lr','lightgbm','wrapper','cor_selector']
+                 ).to_csv("run_time.csv", index=False)
     return 1;
 def wrapper(total_data_df,y):
     print("Wrapping...")
     data_norm = MinMaxScaler().fit_transform(total_data_df)
-    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=M_FEATURES, step=10, verbose=5)
+    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=M_FEATURES, step=40, verbose=5)
     rfe_selector.fit(data_norm, y)
     rfe_support = rfe_selector.get_support()
     rfe_feature = total_data_df.loc[:,rfe_support].columns.tolist()
@@ -154,7 +173,7 @@ def wrapper(total_data_df,y):
     return rfe_feature
 
 def lightGBM(total_data_df,y):
-    print("lightGBMClassifier")
+    print("lightGBMClassifier...")
     lgbc=LGBMClassifier(n_estimators = 500, random_state = 0, n_jobs = -1, learning_rate=0.05, num_leaves = 32, colsample_bytree=0.2, reg_alpha=3, reg_lambda=1, min_split_gain=0.01, min_child_weight=40) 
     sfm = SelectFromModel(lgbc, max_features = M_FEATURES, threshold = 1)
     sfm.fit(total_data_df,y)
@@ -165,7 +184,7 @@ def lightGBM(total_data_df,y):
     return sfm_feature
 
 def cor_selector(X, y):
-    print("cor_selector")
+    print("cor_selector...")
     cor_list = []
     # calculate the correlation with y for each feature
     for i in X.columns.tolist():
@@ -181,7 +200,7 @@ def cor_selector(X, y):
     return cor_feature
 
 def chi2_square(total_data_df, y):
-    print("chi2_square")
+    print("chi2_square...")
     X_norm = MinMaxScaler().fit_transform(total_data_df)
     chi_selector = SelectKBest(chi2, k=M_FEATURES)
     chi_selector.fit(X_norm, y)
@@ -192,7 +211,7 @@ def chi2_square(total_data_df, y):
     return chi_feature
 
 def Embedded_LR(total_data_df,y):
-    print("Embedded LR")
+    print("Embedded LR...")
     X = total_data_df
     X_norm = MinMaxScaler().fit_transform(X)
 
@@ -203,7 +222,6 @@ def Embedded_LR(total_data_df,y):
     embedded_lr_feature = X.loc[:,embedded_lr_support].columns.tolist()
     print(str(len(embedded_lr_feature)), 'selected features')
     pd.DataFrame(embedded_lr_feature).to_csv("embedded_lr.csv", index=False)
-    
     return embedded_lr_selector.get_support(indices = True)
 
 gc.collect()        
