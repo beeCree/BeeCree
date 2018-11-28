@@ -21,6 +21,7 @@ MAKEY_SKIP = 2
 ONEHOT_SKIP = 3
 IMPUTE_SKIP = 4
 KIND_OF_FS = 5
+M_FEATURES =30
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
 ## 2. concat같이 오래 걸리는 한 번만 해도 되는 작업은
@@ -144,7 +145,7 @@ def selectfs(total_data_df,y):
 def wrapper(total_data_df,y):
     print("Wrapping...")
     data_norm = MinMaxScaler().fit_transform(total_data_df)
-    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=30, step=10, verbose=5)
+    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=M_FEATURES, step=10, verbose=5)
     rfe_selector.fit(data_norm, y)
     rfe_support = rfe_selector.get_support()
     rfe_feature = total_data_df.loc[:,rfe_support].columns.tolist()
@@ -155,7 +156,7 @@ def wrapper(total_data_df,y):
 def lightGBM(total_data_df,y):
     print("lightGBMClassifier")
     lgbc=LGBMClassifier(n_estimators = 500, random_state = 0, n_jobs = -1, learning_rate=0.05, num_leaves = 32, colsample_bytree=0.2, reg_alpha=3, reg_lambda=1, min_split_gain=0.01, min_child_weight=40) 
-    sfm = SelectFromModel(lgbc, max_features = 30, threshold = 1)
+    sfm = SelectFromModel(lgbc, max_features = M_FEATURES, threshold = 1)
     sfm.fit(total_data_df,y)
     sfm_support = sfm.get_support()
     sfm_feature = total_data_df.loc[:,sfm_support].columns.tolist()
@@ -173,7 +174,7 @@ def cor_selector(X, y):
     # replace NaN with 0
     cor_list = [0 if np.isnan(i) else i for i in cor_list]
     # feature name
-    cor_feature = X.iloc[:,np.argsort(np.abs(cor_list))[-30:]].columns.tolist()
+    cor_feature = X.iloc[:,np.argsort(np.abs(cor_list))[-M_FEATURES:]].columns.tolist()
     cor_feature.sort()
     print(str(len(cor_feature)), 'selected features')
     pd.DataFrame(cor_feature).to_csv("pearson.csv", index=False)
@@ -182,7 +183,7 @@ def cor_selector(X, y):
 def chi2_square(total_data_df, y):
     print("chi2_square")
     X_norm = MinMaxScaler().fit_transform(total_data_df)
-    chi_selector = SelectKBest(chi2, k=30)
+    chi_selector = SelectKBest(chi2, k=M_FEATURES)
     chi_selector.fit(X_norm, y)
     chi_support = chi_selector.get_support()
     chi_feature = total_data_df.loc[:,chi_support].columns.tolist()
@@ -195,7 +196,7 @@ def Embedded_LR(total_data_df,y):
     X = total_data_df
     X_norm = MinMaxScaler().fit_transform(X)
 
-    embedded_lr_selector = SelectFromModel(LogisticRegression(penalty="l1"), '1.25*median')
+    embedded_lr_selector = SelectFromModel(LogisticRegression(penalty="l1"), '1.25*median', max_features = M_FEATURES)
     embedded_lr_selector.fit(X_norm, y)
 
     embedded_lr_support = embedded_lr_selector.get_support()
