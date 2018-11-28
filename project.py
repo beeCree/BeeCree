@@ -157,9 +157,7 @@ def selectfs(total_data_df,y):
         end=time.time()
         run_time_list.append(end-start)
 
-    pd.DataFrame(run_time_list,
-                 columns=['chi2','embedded_lr','lightgbm','wrapper','cor_selector']
-                 ).to_csv("run_time.csv", index=False)
+    pd.DataFrame(run_time_list).to_csv("run_time.csv", index=False)
     return 1;
 def wrapper(total_data_df,y):
     print("Wrapping...")
