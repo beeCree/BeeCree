@@ -109,7 +109,6 @@ def binaryNd2f(application_train, y):
         gc.collect()
         total_data_df = pd.read_csv(filename()+'/concat_b.csv')
         return total_data_df
-    print(sys.argv[FILE_NAME][:-4])
     print("Executing binary encoder..")
     gc.collect()
     cat_features = [4, 5, 6, 7, 14, 18]
@@ -138,13 +137,13 @@ def binaryNd2f(application_train, y):
         cat_max.append(temp_max)
         cat_min.append(temp_min)
         dims.append(int(math.ceil(np.log2(temp_max-temp_min+1))))
-    print(cat_min)
+    binenc_info = np.concatenate((np.array(cat_min), np.array(dims)))
+    pd.DataFrame(binenc_info).to_csv(filename()+'/binenc_info.csv', index=False)
     non_cat_train = application_train.iloc[:,non_cat_features].values
     for i in range(6):
         binencoded = np.zeros((length(application_train),dims[i]))
         for j in range(length(application_train)):
             temp = application_train.iloc[j, cat_features[i]]-cat_min[i]
-            print(temp)
             for k in range(int(math.ceil(dims[i]))):
                 binencoded[j, k] = temp%2
                 if(np.isnan(temp)):
@@ -171,7 +170,7 @@ def onehotNd2f(application_train, y): ## input이 "skip"이면 skip. else not sk
     else:
         gc.collect()
         ## *********************************************************
-        cat_features = [4, 5, 6, 7, 13, 17] ## 실제 데이터에서 카테고리 데이터의 인덱스
+        cat_features = [4, 5, 6, 7, 14, 18] ## 실제 데이터에서 카테고리 데이터의 인덱스
         non_cat_features = []
         for i in range(application_train.shape[1]):
             if i in cat_features:
