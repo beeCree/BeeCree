@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 import gc
@@ -24,7 +25,7 @@ KIND_OF_ENC = 3
 ENCODER_SKIP = 4
 IMPUTE_SKIP = 5
 KIND_OF_FS = 6
-M_FEATURES =20
+M_FEATURES = 100
 CONST_DATE_INDEX = 13
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
