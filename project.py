@@ -352,14 +352,13 @@ def fAPI(total_data_df, y, testx, testy):
     ## x=Dense 는 hidden layer 수
     ## Dense(k)에서 k는 hidden layer에서 feature 
     ##x = Dense(50, activation = 'relu')(inputs)
-    x = Dense(40, activation = 'relu')(inputs)
-    x = Dense(32, activation = 'relu')(x)
-    
+    x = Dense(1000, activation = 'relu')(inputs)
+    ##x = Dense(500, activation = 'relu')(x)
     predictions = Dense(1)(x)
 
     #------------------------------------------------------------------
     model = Model(inputs = inputs, outputs = predictions)
-    model.compile(optimizer='rmsprop', loss=losses.mean_absolute_error)
+    model.compile(optimizer='rmsprop', loss=losses.mean_absolute_percentage_error)
     model.fit(total_data_df, y)
     
     print(model.predict(testx, verbose=1))
