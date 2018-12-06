@@ -107,6 +107,10 @@ def enc_selector(application_train, y):
     if(sys.argv[KIND_OF_ENC] == "ohc"):
         print("One hot encoder selected.")
         return onehotNd2f(application_train, y)
+    if(sys.argv[KIND_OF_ENC] == "non"):
+        print("Not encoding selected")
+        return notEncode(application_train,y)
+        
 def binaryNd2f(application_train, y):
     if(sys.argv[ENCODER_SKIP] == "Y"):
         print("Skipping binary encoder")
@@ -209,6 +213,22 @@ def onehotNd2f(application_train, y): ## input이 "skip"이면 skip. else not sk
         return total_data_df
         ## one hot encoding finish
         ## *************************************************************
+
+def notEncode(application_train, y):
+    if(sys.argv[ENCODER_SKIP] == "Y"):
+        print("Skipping binary encoder")
+        gc.collect()
+        total_data_df = pd.read_csv(filename()+'/concat_n.csv')
+        return total_data_df
+    print("Not encoder..")
+    gc.collect()
+    application_train=dateColumn2Float(application_train, 0) ##0번째 feature은 날짜.
+    application_train = dateColumn2Float(application_train, CONST_DATE_INDEX + 6)
+    print("done")
+    application_train = pd.DataFrame(application_train)
+    application_train.to_csv(filename()+'/concat_n.csv', index=False)
+    return application_train
+
 def impute(total_data_df):
     print("Imputing...")
     if(sys.argv[IMPUTE_SKIP] == "Y"):
@@ -327,12 +347,19 @@ def fAPI(total_data_df, y, testx, testy):
 
     inputs = Input(shape=(dim_mody,))
 
-    x = Dense(64, activation = 'relu')(inputs)
+    ##-----------------------------------------------------------------
+    ## hyper parameter 조절 하는 곳
+    ## x=Dense 는 hidden layer 수
+    ## Dense(k)에서 k는 hidden layer에서 feature 
+    ##x = Dense(50, activation = 'relu')(inputs)
+    x = Dense(40, activation = 'relu')(inputs)
     x = Dense(32, activation = 'relu')(x)
-    predictions = Dense(1, activation = 'relu')(x)
+    
+    predictions = Dense(1)(x)
 
+    #------------------------------------------------------------------
     model = Model(inputs = inputs, outputs = predictions)
-    model.compile(optimizer='rmsprop', loss=losses.mean_absolute_error, metrics=['accuracy'])
+    model.compile(optimizer='rmsprop', loss=losses.mean_absolute_error)
     model.fit(total_data_df, y)
     
     print(model.predict(testx, verbose=1))
@@ -368,6 +395,12 @@ def fold5(total_data_df, y):
     listn2 =sorted(list0 + list1 + list3 + list4)
     listn1 =sorted(list0 + list2 + list4 + list3)
     listn0 =sorted(list1 + list2 + list3 + list4)
+    print("yndn0 = ", ynd[listn0,:])
+    print("yndn1 = ", ynd[listn1,:])
+    print("yndn2 = ", ynd[listn2,:])
+    print("yndn3 = ", ynd[listn3,:])
+    print("yndn4 = ", ynd[listn4,:])
+          
     acc0 = fAPI(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
     acc1 = fAPI(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
     acc2 = fAPI(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
