@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 import gc
@@ -329,15 +328,15 @@ def fAPI(total_data_df, y, testx, testy):
     inputs = Input(shape=(dim_mody,))
 
     x = Dense(64, activation = 'relu')(inputs)
-    x = Dense(64, activation = 'relu')(x)
-    predictions = Dense(1, activation = 'softmax')(x)
+    x = Dense(32, activation = 'relu')(x)
+    predictions = Dense(1, activation = 'relu')(x)
 
     model = Model(inputs = inputs, outputs = predictions)
     model.compile(optimizer='rmsprop', loss=losses.mean_absolute_error, metrics=['accuracy'])
-    model_final = model.fit(total_data_df, y)
+    model.fit(total_data_df, y)
     
     print(model.predict(testx, verbose=1))
-    return accuracy(testy, model_final.predict(testx))
+    return accuracy(testy, model.predict(testx))
     
 def accuracy(real, pred):
     total = 0
