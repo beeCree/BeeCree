@@ -19,13 +19,16 @@ from math import isnan
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
+from keras.layers import Input, Dense
+from keras.models import Model
+from keras import losses
 FILE_NAME =1
 MAKEY_SKIP = 2
 KIND_OF_ENC = 3
 ENCODER_SKIP = 4
 IMPUTE_SKIP = 5
 KIND_OF_FS = 6
-M_FEATURES = 100
+M_FEATURES = 20
 CONST_DATE_INDEX = 13
 ##**************************************************************************************
 ## 1. declaritive coding style로 더 보기 편하게 만들었음
@@ -41,6 +44,7 @@ CONST_DATE_INDEX = 13
 ##  위에 const로 정의해놓았으니 입력 방식을 바꾸고 싶으면
 ##  import 아래를 참조.
 ##**************************************************************************************
+
 
 def sindeg(x):
     return math.sin(x*math.pi/180)
@@ -222,6 +226,8 @@ def impute(total_data_df):
         return total_data_df
 def selectfs(total_data_df,y):
     run_time_list=[]
+    if(sys.argv[KIND_OF_FS] == 'non'):
+        return total_data_df
     if(sys.argv[KIND_OF_FS] == "chi2" or sys.argv[KIND_OF_FS] == "all"):
         start=time.time()
         chi2_square(total_data_df,y)
@@ -253,7 +259,7 @@ def selectfs(total_data_df,y):
 def wrapper(total_data_df,y):
     print("Wrapping...")
     data_norm = MinMaxScaler().fit_transform(total_data_df)
-    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=M_FEATURES, step=40, verbose=5)
+    rfe_selector = RFE(estimator=LogisticRegression(), n_features_to_select=M_FEATURES, step=10, verbose=5)
     rfe_selector.fit(data_norm, y)
     rfe_support = rfe_selector.get_support()
     rfe_feature = total_data_df.loc[:,rfe_support].columns.tolist()
@@ -312,8 +318,63 @@ def Embedded_LR(total_data_df,y):
     print(str(len(embedded_lr_feature)), 'selected features')
     pd.DataFrame(embedded_lr_feature).to_csv(filename()+'/embedded_lr.csv', index=False)
     return embedded_lr_selector.get_support(indices = True)
+
 if(not os.path.exists(filename())):
     os.makedirs(filename())
+def fAPI(total_data_df, y, testx, testy):
+    dim_mody = width(total_data_df)
+    features = selectfs(total_data_df,y)
+    gc.collect()
+
+    inputs = Input(shape=(dim_mody,))
+
+    x = Dense(64, activation = 'relu')(inputs)
+    x = Dense(64, activation = 'relu')(x)
+    predictions = Dense(1, activation = 'softmax')(x)
+
+    model = Model(inputs = inputs, outputs = predictions)
+    model.compile(optimizer='rmsprop', loss=losses.mean_absolute_error, metrics=['accuracy'])
+    model_final = model.fit(total_data_df, y)
+    
+    print(model.predict(testx, verbose=1))
+    return accuracy(testy, model_final.predict(testx))
+    
+def accuracy(real, pred):
+    total = 0
+    for i in range(len(real)):
+        total=total+abs((real[i]-pred[i])/real[i])
+    return 1-1/len(real)*total
+def fold5(total_data_df, y):
+    X = total_data_df.values
+    ynd = y.values
+    dim_mody = width(X)
+    list0=[]
+    list1=[]
+    list2=[]
+    list3=[]
+    list4=[]
+    for i in range(len(X)):
+        if(i%5==0):
+            list0.append(i)
+        if(i%5==1):
+            list1.append(i)
+        if(i%5==2):
+            list2.append(i)
+        if(i%5==3):
+            list3.append(i)
+        if(i%5==4):
+            list4.append(i)
+    listn4 =sorted(list0 + list1 + list2 + list3)
+    listn3 =sorted(list0 + list1 + list2 + list4)
+    listn2 =sorted(list0 + list1 + list3 + list4)
+    listn1 =sorted(list0 + list2 + list4 + list3)
+    listn0 =sorted(list1 + list2 + list3 + list4)
+    acc0 = fAPI(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
+    acc1 = fAPI(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
+    acc2 = fAPI(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
+    acc3 = fAPI(X[listn3,:], ynd[listn3,:],X[list3,:],ynd[list3,:])
+    acc4 = fAPI(X[listn4,:], ynd[listn4,:],X[list4,:],ynd[list4,:])
+    print((acc0+acc1+acc2+acc3+acc4)/5)
 gc.collect()        
 warnings.filterwarnings("ignore")
 ## input data에서 첫 줄을 띄어줘야 한다.
@@ -333,3 +394,5 @@ gc.collect()
 
 features = selectfs(total_data_df,y)
 gc.collect()
+
+fold5(total_data_df, y)
