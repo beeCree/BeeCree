@@ -6,6 +6,7 @@ import time
 import sys
 import os
 import math
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
@@ -342,7 +343,7 @@ if(not os.path.exists(filename())):
     os.makedirs(filename())
 def fAPI(total_data_df, y, testx, testy):
     dim_mody = width(total_data_df)
-    features = selectfs(total_data_df,y)
+    
     gc.collect()
 
     inputs = Input(shape=(dim_mody,))
@@ -363,7 +364,16 @@ def fAPI(total_data_df, y, testx, testy):
     
     print(model.predict(testx, verbose=1))
     return accuracy(testy, model.predict(testx))
-    
+
+def gbr(total_data_df, y, testx, testy):
+    print("gradientboostingregressor")
+    GBR = GradientBoostingRegressor(n_estimators = 100, max_depth = 9)
+    GBR.fit(total_data_df,y)
+    ##acc=GBR.score(testx,testy)*100
+    acc=accuracy(testy,GBR.predict(testx))
+    print("Accuracy --> ", acc)
+    return acc
+
 def accuracy(real, pred):
     total = 0
     for i in range(len(real)):
@@ -399,12 +409,18 @@ def fold5(total_data_df, y):
     print("yndn2 = ", ynd[listn2,:])
     print("yndn3 = ", ynd[listn3,:])
     print("yndn4 = ", ynd[listn4,:])
-          
+    """
     acc0 = fAPI(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
     acc1 = fAPI(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
     acc2 = fAPI(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
     acc3 = fAPI(X[listn3,:], ynd[listn3,:],X[list3,:],ynd[list3,:])
     acc4 = fAPI(X[listn4,:], ynd[listn4,:],X[list4,:],ynd[list4,:])
+    """
+    acc0 = gbr(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
+    acc1 = gbr(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
+    acc2 = gbr(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
+    acc3 = gbr(X[listn3,:], ynd[listn3,:],X[list3,:],ynd[list3,:])
+    acc4 = gbr(X[listn4,:], ynd[listn4,:],X[list4,:],ynd[list4,:])
     print((acc0+acc1+acc2+acc3+acc4)/5)
 gc.collect()        
 warnings.filterwarnings("ignore")
