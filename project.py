@@ -36,7 +36,7 @@ CONST_DATE_INDEX = 13
 ##  command line argument로 skip여부를 확인하게 바꾸었음.
 ##  형식;
 ##  project.py
-##      (file name) (skip makey?) (skip onehot과 전처리?) (skip impute?) (name of fs)
+##      (file name) (skip makey?) (kind of encoding) (skip onehot과 전처리?) (skip impute?) (name of fs)
 ##  skip하고 싶다면 대문자 "Y"를 입력시 skip됨.
 ##  name of fs는 당연히 쓸 feature selection의 이름을 입력하거나,
 ##  all을 입력하면 implement된 모든 feature selection을 다 execute함.
@@ -45,14 +45,45 @@ CONST_DATE_INDEX = 13
 ##  import 아래를 참조.
 ##**************************************************************************************
 
+def log_y(y):
+    v = y.values
+    logy = np.zeros((length(v),1))
+    for i in range(length(v)):
+        logy[i,0] = math.log(v[i])*10000
+    return pd.DataFrame(logy)
+
+def exp_y(y):
+    v = y
+    expy = np.zeros((length(v),1))
+    for i in range(length(v)):
+        expy[i,0] = math.exp(v[i]/10000)
+    return expy
 
 def sindeg(x):
     return math.sin(x*math.pi/180)
 def cosdeg(x):
     return math.cos(x*math.pi/180)
 
+def handle_deg2(application_train):
+    deg1 = application_train[1]
+    deg2 = application_train[2]
+    height = application_train[3]
+    deg1 = deg1.values
+    deg2 = deg2.values
+    height = height.values
+    xyz = np.zeros((length(deg1),3))
+    for i in range(length(deg1)):
+        r = 6371000+height[i]
+        xyz[i,0] = r*cosdeg(deg1[i])*cosdeg(deg2[i])
+        xyz[i,1] = r*cosdeg(deg1[i])*sindeg(deg2[i])
+        xyz[i,2] = r*sindeg(deg1[i])
+    array1 = application_train.values
+    temp1 =  np.concatenate((array1[:,:1],xyz),axis=1)
+    result = np.concatenate((temp1,array1[:,4:]),axis=1)
+    return pd.DataFrame(result)
+
 def handle_deg(application_train):
-    deg = application_train[["7"]]
+    deg = application_train[["9"]]
     deg1 = deg.values
     sincos = np.zeros((length(deg1),2))
     for i in range(length(deg1)):
@@ -368,10 +399,16 @@ def fAPI(total_data_df, y, testx, testy):
 
 def gbr(total_data_df, y, testx, testy):
     print("gradientboostingregressor")
-    GBR = GradientBoostingRegressor(n_estimators = 100, max_depth = 9)
+    #print(y.shape,testy.shape)
+    GBR = GradientBoostingRegressor(n_estimators = 100, max_depth = 6)
     GBR.fit(total_data_df,y)
     ##acc=GBR.score(testx,testy)*100
-    acc=accuracy(testy,GBR.predict(testx))
+    ty = testy
+    py = GBR.predict(testx)
+    ty = exp_y(ty)
+    py = exp_y(py)
+    acc=accuracy(ty,py)
+    #print(ty,py)
     print("Accuracy --> ", acc)
     return acc
 
@@ -382,6 +419,7 @@ def accuracy(real, pred):
     return 1-1/len(real)*total
 def fold5(total_data_df, y):
     X = total_data_df.values
+    y = log_y(y)
     ynd = y.values
     dim_mody = width(X)
     list0=[]
@@ -423,6 +461,7 @@ warnings.filterwarnings("ignore")
 
 application_train = pd.read_csv(sys.argv[FILE_NAME]) ##data_train.csv이어야 하지만 테스트용
 y=makey(application_train)
+
 """
 exclude_list = [1, 2, 4, 13]
 include_list = []
@@ -439,6 +478,9 @@ total_data_df = enc_selector(application_train, y)
 gc.collect()
 
 total_data_df = pd.DataFrame(impute(total_data_df))
+##경도 위도
+total_data_df = handle_deg2(total_data_df)
+print(total_data_df)
 gc.collect()
 
 features = selectfs(total_data_df,y)
