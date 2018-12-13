@@ -52,7 +52,7 @@ def cosdeg(x):
     return math.cos(x*math.pi/180)
 
 def handle_deg(application_train):
-    deg = application_train[["9"]]
+    deg = application_train[["7"]]
     deg1 = deg.values
     sincos = np.zeros((length(deg1),2))
     for i in range(length(deg1)):
@@ -101,6 +101,7 @@ def makey(application_train):
         y.to_csv(filename()+'/y.csv', index=False)
         gc.collect()
         return y
+
 def enc_selector(application_train, y):
     if(sys.argv[KIND_OF_ENC] == "bin"):
         print("Binary encoder selected.")
@@ -409,13 +410,6 @@ def fold5(total_data_df, y):
     print("yndn2 = ", ynd[listn2,:])
     print("yndn3 = ", ynd[listn3,:])
     print("yndn4 = ", ynd[listn4,:])
-    """
-    acc0 = fAPI(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
-    acc1 = fAPI(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
-    acc2 = fAPI(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
-    acc3 = fAPI(X[listn3,:], ynd[listn3,:],X[list3,:],ynd[list3,:])
-    acc4 = fAPI(X[listn4,:], ynd[listn4,:],X[list4,:],ynd[list4,:])
-    """
     acc0 = gbr(X[listn0,:], ynd[listn0,:],X[list0,:],ynd[list0,:])
     acc1 = gbr(X[listn1,:], ynd[listn1,:],X[list1,:],ynd[list1,:])
     acc2 = gbr(X[listn2,:], ynd[listn2,:],X[list2,:],ynd[list2,:])
@@ -428,9 +422,17 @@ warnings.filterwarnings("ignore")
 ## train file에서 feature과 price를 자른다.
 
 application_train = pd.read_csv(sys.argv[FILE_NAME]) ##data_train.csv이어야 하지만 테스트용
-
 y=makey(application_train)
-
+"""
+exclude_list = [1, 2, 4, 13]
+include_list = []
+for i in range(23):
+    if i in exclude_list:
+        pass
+    else:
+        include_list.append(i)
+application_train = application_train.iloc[:,include_list]
+"""
 application_train = handle_deg(application_train)
 
 total_data_df = enc_selector(application_train, y)
