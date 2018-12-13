@@ -17,7 +17,7 @@ ENCODER_SKIP = 4 ## encoder가 이미 실행 된 경우 skip할 지 결정
 IMPUTE_SKIP = 5 ## impute이 이미 실행 된 경우 skip할 지 결정
 M_FEATURES = 20
 CONST_DATE_INDEX = 13
-TREE_DEPTH = 3
+TREE_DEPTH = 10
 def log_y(y): ##y 행렬 원소들 각각 log
     logy = np.zeros((length(y),1))
     for i in range(length(y)):
