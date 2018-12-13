@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+
+\title{CS376 Term Project}
+\author{Team 8}
+
+\begin{document}
+% No restrictions on the number of pages.
+\maketitle
+
+\section{Model Descriptions}
+% Provide descriptions about your model components, algorithms and applied methods. 
+% You should use figures and equations for clear descriptions.
+% Only text descriptions will lose points.
+Our model is a model that combined binary encoding and Gradient Boosting Regression tree.We first filled blank data with median of that data. After, we used binary encoding to deal with categorical data, simple transformation of data to deal with date/degree, special treatment for date data, and then used Gradient Boosting regression tree to get the final result.\par
+To handle categorical data, we used binary encoding. We also changed date data to six digit integer to handle date data, degree to sin/cos values. Since we may need to predict future prices, we took out date data from original data set, and assumed that the price is linearly proportional to dates.\par
+After we finished processed data, we used Gradient Boosting regression tree for main model. We trained the tree with processed data, and used modified 5-folding using modular operation to verify whether our model fits well, and to tune the hyper-parameters.
+
+\section{Unique Methods}
+% In the below subsections, state applied methods that you think unique and why
+
+\subsection{Division}
+To handle data, we first divided data to two parts; one only with dates, and other rest of data. This was done because we need to predict future dates.
+
+\subsection{Other unique methods}
+...
+
+\section{Libraries}
+% Specify libraries with versions used in the code.
+% Describe purposes of the libraries.
+\subsection{Numpy}
+\noindent
+Version: 1.15.2 \\
+Purpose: numerical computation on datas.
+
+\subsection{scikit-learn}
+\noindent
+Version:
+Purpose:To import Gradient Boosting Regressor, Imputer, etc.
+
+\subsection{pandas}
+\noindent
+Version:
+Purpose:To deal with csv.
+
+\section{Source codes}
+% You should describe
+% 1. Which parts in the codes correspond to the model components.
+% 2. Which parts are for the test and how TAs can test with another test set.
+% 3. Hyper-parameters to use for test.
+
+\section{Performance}
+% Report your performance and analyze it. You should specify
+% 1. How you split the samples in train data for training and validation.
+% 2. Performances on the training and validation samples.
+% 3. Execution time on test data.
+% 4. Analysis of the performance.
+
+\end{document}
