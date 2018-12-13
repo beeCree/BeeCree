@@ -17,6 +17,18 @@ IMPUTE_SKIP = 5 ## impute이 이미 실행 된 경우 skip할 지 결정
 M_FEATURES = 20
 CONST_DATE_INDEX = 13
 
+def log_y(y): ##y 행렬 원소들 각각 log
+    logy = np.zeros((length(y),1))
+    for i in range(length(y)):
+        logy[i,0] = math.log(y[i])*10000
+    return pd.DataFrame(logy)
+
+def exp_y(y): ##y 행렬 원소들 각각 exp 
+    expy = np.zeros((length(y),1))
+    for i in range(length(y)):
+        expy[i,0] = math.exp(y[i]/10000)
+    return expy
+
 def sindeg(x): ## deg로 값을 input받는 sin 함수.
     return math.sin(x*math.pi/180)
 def cosdeg(x): ## deg로 값을 input받는 cos 함수.
@@ -98,6 +110,8 @@ def binaryNd2f(application_train, y):
         total_data_df = pd.read_csv(filename()+'/concat_b.csv')
         return total_data_df
     print("Executing binary encoder..")
+    ## handle degree
+    application_train = handle_deg(application_train)
     gc.collect()
     cat_features = [4, 5, 6, 7, 14, 18]
     non_cat_features = []
@@ -152,6 +166,8 @@ def onehotNd2f(application_train, y):
         return total_data_df
     else:
         gc.collect()
+        ## handle degree
+        application_train = handle_deg(application_train)
         ## *********************************************************
         cat_features = [4, 5, 6, 7, 14, 18] ## 실제 데이터에서 카테고리 데이터의 인덱스
         non_cat_features = []
@@ -197,6 +213,8 @@ def notEncode(application_train, y):
         total_data_df = pd.read_csv(filename()+'/concat_n.csv')
         return total_data_df
     print("Not encoder..")
+    ## handle degree
+    application_train = handle_deg(application_train)
     gc.collect()
     application_train=dateColumn2Float(application_train, 0) ##0번째 feature은 날짜.
     application_train = dateColumn2Float(application_train, CONST_DATE_INDEX + 6)
@@ -227,9 +245,9 @@ def gbr(total_data_df, y, testx, testy):
     ## make a model using gradient boosting regressor tree
     print("gradientboostingregressor")
     ## maximum depth of tree is 9
-    GBR = GradientBoostingRegressor(n_estimators = 100, max_depth = 9)
-    GBR.fit(total_data_df,y)
-    acc=accuracy(testy,GBR.predict(testx))
+    GBR = GradientBoostingRegressor(n_estimators = 100, max_depth = 5)
+    GBR.fit(total_data_df,log_y(y))
+    acc=accuracy(testy,exp_y(GBR.predict(testx)))
     print("Accuracy --> ", acc)
     return acc
 
@@ -284,7 +302,6 @@ warnings.filterwarnings("ignore")
 
 application_train = pd.read_csv(sys.argv[FILE_NAME])
 y=makey(application_train)
-application_train = handle_deg(application_train)
 
 total_data_df = enc_selector(application_train, y)
 gc.collect()
