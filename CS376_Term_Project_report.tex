@@ -60,6 +60,15 @@ Version: 0.23.4\\
 Purpose:To deal with csv files.
 
 \section{Source codes}
+\subsection{Executing the source code}
+Before explaining the code, we will start with the way executing the source code.\\
+First, select all in "data\_train.csv" and shift the contents downwards for 1 blocks, and write 1, 2, .... , 22 and "price" on the file's first row. \\
+Do the same work for "data\_test.csv"\\
+The file "data\_train.csv" and "data\_train.csv" should be in the same directory that "project.py" is in.\\
+Second, open command-line and change directory where the py file is installed. \\
+Third, type "python project.py data\_train.csv n non n n n" on command-line. It runs the program with the unique method\\
+Fourth, type "python project.py data\_train.csv n non n n n" on command-line. It runs the program with the base method\\
+It makes 2 files inside ./bin, "return.csv", which containing results of the prediction, and "runtime.txt", which contains console output.\\
 \begin{lstlisting} [language=Python]
 import numpy as np
 import pandas as pd
@@ -80,7 +89,7 @@ ENCODER_SKIP = 4 ## encoder가 이미 실행 된 경우 skip할 지 결정
 IMPUTE_SKIP = 5 ## impute이 이미 실행 된 경우 skip할 지 결정
 M_FEATURES = 20
 CONST_DATE_INDEX = 13
-TREE_DEPTH = 10
+TREE_DEPTH = 9
 def log_y(y): ##y 행렬 원소들 각각 log
     logy = np.zeros((length(y),1))
     for i in range(length(y)):
