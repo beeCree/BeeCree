@@ -350,7 +350,32 @@ print(run_time)
 \section{Performance}
 % Report your performance and analyze it. You should specify
 % 1. How you split the samples in train data for training and validation.
+It uses the 5-fold cross validation for the training. Using modular tool, the original train data is partitioned into 5 equal-sized subsamples. The reason for using modularity is to make subsample's distribution equally.\par
 % 2. Performances on the training and validation samples.
 % 3. Execution time on test data.
+\begin{table} [ht]
+\begin{center}
+\caption{Validation result using 5-fold cross validation without unique method}
+\begin{tabular} {c |c| c|c| c| c|c}
+  \textbf{ } & \textbf{fold 1} & \textbf{fold 2}& \textbf{fold 3} & \textbf{fold 4}& \textbf{fold 5} & \textbf{mean}\\
+\hline
+Accuracy & 0.948515 & 0.958869 & 0.948604 & 0.948661 & 0.948705 & 0.948671\\
+\end{tabular}
+\end{center}
+\end{table}
+Execution time is 3757sec.\par
+\begin{table} [ht]
+\begin{center}
+\caption{validation result using 5-fold cross validation with unique method}
+\begin{tabular} {c |c| c|c| c| c|c}
+  \textbf{ } & \textbf{fold 1} & \textbf{fold 2}& \textbf{fold 3} & \textbf{fold 4}& \textbf{fold 5} & \textbf{mean}\\
+\hline
+Accuracy & 0.949924 & 0.950214 & 0.949900 & 0.949579 & 0.950801 & 0.950084\\
+\end{tabular}
+\end{center}
+\end{table}
+Execution time is 4377 sec.\par
 % 4. Analysis of the performance.
+Performance was improved by 0.14\% when using the unique method. Because base model have already large accuracy, unique method makes quite impactive changes. This program takes very long time, but we can reduce excution time to change hyperparameter. We can find optimal performance between execution time and accuracy through changing hyperparameter. \par
+
 \end{document}
